@@ -1362,6 +1362,1009 @@ function MatrixOverlay() {
 
 
 // ═══════════════════════════════════════════════════════════════
+// BIO FI3LD — The Energetic Body & Human Biofield
+// ═══════════════════════════════════════════════════════════════
+
+function BiofieldVisualizer({ emotion, intensity }) {
+  const canvasRef = useRef(null);
+  const animRef = useRef(null);
+
+  const emotionColors = {
+    love: { h: 330, s: 80, l: 60, spread: 1.4, pulse: 0.8, label: "Love & Compassion" },
+    joy: { h: 50, s: 90, l: 60, spread: 1.3, pulse: 1.2, label: "Joy & Excitement" },
+    peace: { h: 200, s: 70, l: 55, spread: 1.2, pulse: 0.4, label: "Peace & Calm" },
+    fear: { h: 0, s: 10, l: 30, spread: 0.5, pulse: 2.5, label: "Fear & Anxiety" },
+    anger: { h: 0, s: 90, l: 45, spread: 0.7, pulse: 3.0, label: "Anger & Frustration" },
+    sadness: { h: 220, s: 30, l: 35, spread: 0.6, pulse: 0.3, label: "Sadness & Grief" },
+    gratitude: { h: 140, s: 80, l: 55, spread: 1.5, pulse: 0.6, label: "Gratitude" },
+    neutral: { h: 180, s: 20, l: 45, spread: 0.9, pulse: 0.8, label: "Neutral / Baseline" },
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let w = 400, h = 500;
+    canvas.width = w * 2; canvas.height = h * 2;
+    ctx.scale(2, 2);
+    const cx = w / 2, cy = h * 0.45;
+
+    const draw = (time) => {
+      const t = time * 0.001;
+      const e = emotionColors[emotion] || emotionColors.neutral;
+      const int = intensity / 100;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Biofield aura layers (outermost first)
+      const layers = 8;
+      for (let i = layers; i >= 0; i--) {
+        const layerRatio = i / layers;
+        const baseRadius = 60 + i * 22 * e.spread;
+        const wobble = Math.sin(t * e.pulse + i * 0.8) * (6 + i * 3) * int;
+        const radius = baseRadius + wobble;
+
+        // Draw aura ellipse
+        const hue = (e.h + i * 8) % 360;
+        const alpha = (0.06 + (1 - layerRatio) * 0.08) * int;
+
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, radius * 0.7, radius, 0, 0, Math.PI * 2);
+
+        const grad = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
+        grad.addColorStop(0, `hsla(${hue}, ${e.s}%, ${e.l}%, ${alpha * 1.5})`);
+        grad.addColorStop(0.5, `hsla(${hue}, ${e.s - 10}%, ${e.l}%, ${alpha})`);
+        grad.addColorStop(1, `hsla(${hue}, ${e.s}%, ${e.l}%, 0)`);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Pulsing edge glow
+        if (i > 2 && i < 7) {
+          ctx.strokeStyle = `hsla(${hue}, ${e.s}%, ${e.l + 15}%, ${alpha * 0.8})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+
+      // Energy particles flowing around the body
+      const particleCount = Math.floor(20 + int * 40);
+      for (let p = 0; p < particleCount; p++) {
+        const angle = (p / particleCount) * Math.PI * 2 + t * (e.pulse * 0.3);
+        const orbitA = 80 + Math.sin(t * 0.5 + p * 0.7) * 30;
+        const orbitB = 110 + Math.cos(t * 0.3 + p * 0.5) * 40;
+        const px = cx + Math.cos(angle) * orbitA * 0.7;
+        const py = cy + Math.sin(angle) * orbitB;
+        const size = 1 + Math.sin(t * 2 + p) * 0.8;
+        const hue = (e.h + p * 5) % 360;
+
+        ctx.beginPath();
+        ctx.arc(px, py, size * int, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue}, ${e.s}%, ${e.l + 20}%, ${0.3 + int * 0.5})`;
+        ctx.shadowColor = `hsla(${hue}, ${e.s}%, ${e.l}%, 0.5)`;
+        ctx.shadowBlur = 6;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Body silhouette (simple)
+      // Head
+      ctx.beginPath();
+      ctx.arc(cx, cy - 62, 18, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Torso
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - 15, 22, 40, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+
+      // Legs
+      ctx.beginPath();
+      ctx.ellipse(cx - 12, cy + 50, 10, 35, -0.1, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(cx + 12, cy + 50, 10, 35, 0.1, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+
+      // Chakra points (7 glowing dots along spine)
+      const chakraColors = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4", "#6366f1", "#a855f7"];
+      const chakraY = [cy + 20, cy + 5, cy - 10, cy - 25, cy - 35, cy - 50, cy - 62];
+      chakraColors.forEach((color, i) => {
+        const glow = 3 + Math.sin(t * 1.5 + i * 0.9) * 2 * int;
+        ctx.beginPath();
+        ctx.arc(cx, chakraY[i], glow, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10 + int * 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // Heart coherence wave (if love/gratitude/peace)
+      if (["love", "gratitude", "peace", "joy"].includes(emotion)) {
+        ctx.beginPath();
+        ctx.strokeStyle = `hsla(${e.h}, ${e.s}%, ${e.l + 20}%, ${0.15 * int})`;
+        ctx.lineWidth = 1.5;
+        for (let x = 0; x < w; x++) {
+          const wave = Math.sin(x * 0.03 + t * 1.5) * 15 * int * Math.sin(x * 0.008);
+          ctx[x === 0 ? "moveTo" : "lineTo"](x, h - 40 + wave);
+        }
+        ctx.stroke();
+      }
+
+      // Contracted field indicator (fear/anger/sadness)
+      if (["fear", "anger", "sadness"].includes(emotion)) {
+        // Jagged static around body
+        for (let j = 0; j < 15 * int; j++) {
+          const jx = cx + (Math.random() - 0.5) * 120;
+          const jy = cy + (Math.random() - 0.5) * 160;
+          ctx.beginPath();
+          ctx.moveTo(jx, jy);
+          ctx.lineTo(jx + (Math.random() - 0.5) * 12, jy + (Math.random() - 0.5) * 12);
+          ctx.strokeStyle = `hsla(${e.h}, ${e.s}%, ${e.l}%, ${0.2 + Math.random() * 0.3})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+
+      // Label
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.font = "11px 'Orbitron', sans-serif";
+      ctx.textAlign = "center";
+      ctx.letterSpacing = "3px";
+      ctx.fillText(e.label.toUpperCase(), cx, h - 10);
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+    animRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [emotion, intensity]);
+
+  return <canvas ref={canvasRef} style={{ width: "100%", maxWidth: 400, height: "auto", aspectRatio: "4/5" }} />;
+}
+
+// Earth field interaction visualizer
+function EarthFieldVisualizer({ emotion, peopleCount }) {
+  const canvasRef = useRef(null);
+  const animRef = useRef(null);
+
+  const positive = ["love", "joy", "peace", "gratitude"].includes(emotion);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = 600, h = 240;
+    canvas.width = w * 2; canvas.height = h * 2;
+    ctx.scale(2, 2);
+
+    const people = Array.from({ length: peopleCount }, (_, i) => ({
+      x: 60 + (i / peopleCount) * (w - 120),
+      y: h * 0.5,
+      phase: Math.random() * Math.PI * 2,
+    }));
+
+    const draw = (time) => {
+      const t = time * 0.001;
+      ctx.clearRect(0, 0, w, h);
+
+      // Earth's field (bottom wave)
+      ctx.beginPath();
+      const earthHue = positive ? 140 : 0;
+      const earthAlpha = positive ? 0.15 : 0.06;
+      for (let x = 0; x < w; x++) {
+        const baseWave = Math.sin(x * 0.01 + t * 0.3) * 8;
+        const harmony = positive ? Math.sin(x * 0.02 + t * 0.7) * 5 * peopleCount * 0.15 : Math.random() * 3;
+        ctx[x === 0 ? "moveTo" : "lineTo"](x, h - 20 + baseWave + harmony);
+      }
+      ctx.strokeStyle = `hsla(${earthHue}, 60%, 50%, ${earthAlpha + peopleCount * 0.02})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      ctx.font = "9px 'JetBrains Mono', monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("EARTH'S SCHUMANN RESONANCE (7.83 Hz)", 10, h - 5);
+
+      // Draw each person and their field
+      people.forEach((p, i) => {
+        // Person dot
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = positive ? "#00ff8c" : "#ef4444";
+        ctx.shadowColor = positive ? "#00ff8c" : "#ef4444";
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Individual biofield ring
+        const fieldRadius = positive ? 20 + Math.sin(t + p.phase) * 8 : 10 + Math.sin(t * 3 + p.phase) * 3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, fieldRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = positive ? `rgba(0, 255, 140, ${0.12})` : `rgba(239, 68, 68, ${0.08})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Connection lines between nearby people (coherent fields overlap)
+        if (positive && i < people.length - 1) {
+          const next = people[i + 1];
+          const dist = Math.abs(next.x - p.x);
+          if (dist < 100) {
+            const connAlpha = (1 - dist / 100) * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            const cpY = p.y - 20 - Math.sin(t + i) * 10;
+            ctx.quadraticCurveTo((p.x + next.x) / 2, cpY, next.x, next.y);
+            ctx.strokeStyle = `rgba(0, 255, 140, ${connAlpha})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+
+        // Waves going down to earth
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y + fieldRadius);
+        ctx.lineTo(p.x + Math.sin(t + p.phase) * 5, h - 25);
+        ctx.strokeStyle = positive ? "rgba(0,255,140,0.06)" : "rgba(255,100,100,0.03)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      });
+
+      // Collective field overlay (if positive and enough people)
+      if (positive && peopleCount >= 3) {
+        const collectiveGrad = ctx.createRadialGradient(w / 2, h * 0.5, 0, w / 2, h * 0.5, w * 0.4);
+        collectiveGrad.addColorStop(0, `rgba(0, 255, 140, ${0.03 * peopleCount})`);
+        collectiveGrad.addColorStop(1, "transparent");
+        ctx.fillStyle = collectiveGrad;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+    animRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [emotion, peopleCount, positive]);
+
+  return <canvas ref={canvasRef} style={{ width: "100%", height: "auto", aspectRatio: "5/2" }} />;
+}
+
+function BiofieldSection() {
+  const [activeEmotion, setActiveEmotion] = useState("neutral");
+  const [intensity, setIntensity] = useState(60);
+  const [peopleCount, setPeopleCount] = useState(1);
+  const [activeLesson, setActiveLesson] = useState(null);
+
+  const emotions = [
+    { id: "love", emoji: "💗", color: "#ec4899" },
+    { id: "joy", emoji: "✨", color: "#eab308" },
+    { id: "peace", emoji: "🕊️", color: "#06b6d4" },
+    { id: "gratitude", emoji: "🙏", color: "#22c55e" },
+    { id: "neutral", emoji: "😐", color: "#78716c" },
+    { id: "sadness", emoji: "💧", color: "#6366f1" },
+    { id: "fear", emoji: "😰", color: "#94a3b8" },
+    { id: "anger", emoji: "🔥", color: "#ef4444" },
+  ];
+
+  const isPositive = ["love", "joy", "peace", "gratitude"].includes(activeEmotion);
+
+  const lessons = [
+    {
+      id: "what", title: "What Is Your Biofield?", icon: "🌐", color: "#06b6d4",
+      content: [
+        { type: "head", text: "You Are More Than a Body" },
+        { type: "text", text: "Imagine you're holding a magnet. You can't see the magnetic field around it, but it's there — you can feel it pull on metal objects nearby. Your body works the same way." },
+        { type: "text", text: "Your heart generates an electromagnetic field that extends 3 to 5 feet outside your body in every direction. Scientists can measure it with sensitive equipment called a magnetometer. This field is called your BIOFIELD — it's a real, measurable energy field that surrounds you like an invisible egg of light." },
+        { type: "head", text: "How It Works" },
+        { type: "text", text: "Every cell in your body is like a tiny battery running on about 0.07 volts. You have roughly 37 trillion cells. That's a LOT of tiny batteries all firing at once, creating electrical signals that ripple outward." },
+        { type: "text", text: "Your heart is the strongest generator — it produces an electrical signal 60 times stronger than your brain. That's why heart-centered emotions (love, gratitude) create the biggest and most coherent fields around you." },
+        { type: "fact", text: "The HeartMath Institute has measured the heart's electromagnetic field extending up to 15 feet from the body using SQUID-based magnetometers." },
+      ]
+    },
+    {
+      id: "emotions", title: "How Emotions Shape Your Field", icon: "🎭", color: "#a78bfa",
+      content: [
+        { type: "head", text: "Your Feelings Are Frequencies" },
+        { type: "text", text: "Think about a time you walked into a room and could just FEEL the tension — even though nobody said anything. That's because you were sensing other people's biofields. Your body is constantly reading the electromagnetic information in the space around you." },
+        { type: "text", text: "When you feel love, gratitude, or joy, your heart rhythm becomes smooth and ordered — scientists call this 'coherent.' Your biofield expands outward like smooth ripples on a pond. It becomes bigger and brighter." },
+        { type: "text", text: "When you feel fear, anger, or stress, your heart rhythm becomes jagged and chaotic — 'incoherent.' Your biofield contracts, shrinks close to your body, and becomes noisy, like static on a TV." },
+        { type: "head", text: "Try It Right Now" },
+        { type: "text", text: "Use the visualizer above — switch between Love and Fear and watch what happens to the field. That's what's actually happening to YOUR energy field right now, based on how you feel." },
+        { type: "fact", text: "Research shows that a person in a coherent heart state can measurably influence the brainwaves of another person sitting nearby — without touching or speaking." },
+      ]
+    },
+    {
+      id: "others", title: "How Your Field Affects Others", icon: "🤝", color: "#22c55e",
+      content: [
+        { type: "head", text: "You Are a Walking Broadcast Tower" },
+        { type: "text", text: "Your biofield doesn't stop at your skin. It radiates outward and overlaps with every person near you. When your field overlaps with someone else's, information is exchanged — not through words, but through electromagnetic waves." },
+        { type: "text", text: "This is why you feel different around different people. That friend who always makes you feel calm? Their coherent biofield is literally entraining (syncing) your heart rhythm to match theirs. That person who stresses you out? Their chaotic field is doing the same thing in reverse." },
+        { type: "head", text: "The Ripple Effect" },
+        { type: "text", text: "Use the slider below the Earth visualization to add more people. Watch how coherent fields connect and amplify each other, while incoherent fields stay isolated. When a group of people feel love or gratitude together, their combined field becomes much stronger than any individual's." },
+        { type: "text", text: "This is why meditation groups, concerts, prayer circles, and sports stadiums all feel so powerful — hundreds or thousands of biofields syncing up creates something bigger than the sum of its parts." },
+        { type: "fact", text: "The Global Coherence Initiative has found correlations between mass human emotions and disturbances in Earth's magnetic field — measured by magnetometers placed around the planet." },
+      ]
+    },
+    {
+      id: "earth", title: "Your Field & The Earth", icon: "🌍", color: "#eab308",
+      content: [
+        { type: "head", text: "You're Plugged Into the Planet" },
+        { type: "text", text: "The Earth itself has a biofield — a massive electromagnetic field generated by its molten iron core. It pulses at a baseline frequency of 7.83 Hz, called the Schumann Resonance. Here's the wild part: your brain's alpha waves (the ones you produce when you're calm and aware) pulse at almost the exact same frequency." },
+        { type: "text", text: "This isn't a coincidence. Life on Earth evolved INSIDE this field for billions of years. Your nervous system is literally tuned to the planet's frequency like a radio tuned to a station." },
+        { type: "head", text: "Grounding Is Real Science" },
+        { type: "text", text: "When you walk barefoot on grass, soil, or sand, free electrons from the Earth flow into your body through your feet. These electrons are antioxidants — they neutralize inflammation. Studies published in the Journal of Environmental and Public Health show that grounding reduces cortisol, improves sleep, and normalizes your body's electrical state." },
+        { type: "text", text: "Think of it this way: your phone needs to be charged. You are an electrical being who also needs to be 'charged' — and the Earth is your charger." },
+        { type: "fact", text: "Astronauts in space, cut off from Earth's Schumann Resonance, experienced health problems until NASA installed Schumann Resonance generators in spacecraft." },
+      ]
+    },
+    {
+      id: "waves", title: "Frequencies & Vibration 101", icon: "〰️", color: "#ec4899",
+      content: [
+        { type: "head", text: "Everything Vibrates — Literally" },
+        { type: "text", text: "Pick up any solid object near you — a pen, your phone, a book. It looks solid, right? But zoom in to the atomic level and it's 99.9999% empty space. The tiny bit of matter that IS there is vibrating at incredibly high frequencies. Everything you see, touch, and hear is vibration." },
+        { type: "text", text: "Sound is vibration you can hear (20Hz to 20,000Hz). Light is vibration you can see (430 trillion Hz to 750 trillion Hz). Your thoughts and emotions create vibrations you can FEEL — even if most people haven't been taught to notice them." },
+        { type: "head", text: "Resonance: The Key to Everything" },
+        { type: "text", text: "When you strike a tuning fork and hold it near another tuning fork of the same pitch, the second one starts vibrating too — without being touched. This is called resonance. Your biofield works the same way." },
+        { type: "text", text: "When you're around someone vibrating at a frequency of love or joy, your field starts to resonate with theirs — you literally start feeling what they feel. This is why 'raise your vibration' isn't just a saying. It's physics." },
+        { type: "fact", text: "In 1665, Dutch physicist Christiaan Huygens discovered that pendulum clocks hanging on the same wall would synchronize their swings. This is the same principle at work in human biofield entrainment." },
+      ]
+    },
+    {
+      id: "protect", title: "How to Strengthen Your Field", icon: "🛡️", color: "#f97316",
+      content: [
+        { type: "head", text: "Your Field Is Like a Muscle" },
+        { type: "text", text: "The more you practice positive emotional states, the stronger and more resilient your biofield becomes. Here's how:" },
+        { type: "head", text: "1. Heart Coherence Breathing" },
+        { type: "text", text: "Breathe in for 5 seconds, out for 5 seconds, while focusing on your heart area and feeling gratitude. Do this for 3 minutes. This single practice, backed by over 300 peer-reviewed studies, creates measurable coherence in your biofield within 60 seconds." },
+        { type: "head", text: "2. Grounding" },
+        { type: "text", text: "Stand barefoot on earth for 20 minutes daily. This recharges your electrical system and synchronizes your field with the Earth's Schumann Resonance." },
+        { type: "head", text: "3. Protect Your Field" },
+        { type: "text", text: "Limit time around people who drain you. Avoid excessive screen time (screens emit EMF that disrupts your field). Spend time in nature — trees and plants have their own coherent biofields." },
+        { type: "head", text: "4. Amplify With Others" },
+        { type: "text", text: "Meditate with others. Practice gratitude in groups. Sing together. Any time multiple people enter coherent states simultaneously, the collective field becomes exponentially stronger." },
+        { type: "fact", text: "A study by the HeartMath Institute found that trained individuals could intentionally alter the conformation (shape) of DNA in a test tube using focused heart coherence from several feet away." },
+      ]
+    },
+  ];
+
+  if (activeLesson) {
+    const lesson = lessons.find(l => l.id === activeLesson);
+    return (
+      <div style={{ animation: "fadeInUp 0.4s ease" }}>
+        <button onClick={() => setActiveLesson(null)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", padding: "8px 18px", borderRadius: 8, cursor: "pointer", fontSize: 11, letterSpacing: 2, fontFamily: "'Orbitron', sans-serif", marginBottom: 24 }}>← BACK TO BIO FI3LD</button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
+          <span style={{ fontSize: 40 }}>{lesson.icon}</span>
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: "#fff", fontFamily: "'Orbitron', sans-serif", margin: 0, letterSpacing: 1 }}>{lesson.title}</h2>
+        </div>
+
+        <GlassCard hover={false} style={{ maxWidth: 700 }}>
+          {lesson.content.map((block, i) => {
+            if (block.type === "head") return <h3 key={i} style={{ fontSize: 16, fontWeight: 600, color: lesson.color, margin: i === 0 ? "0 0 12px" : "28px 0 12px", fontFamily: "'Orbitron', sans-serif", letterSpacing: 1 }}>{block.text}</h3>;
+            if (block.type === "fact") return (
+              <div key={i} style={{ margin: "20px 0", padding: "16px 20px", borderRadius: 10, background: `${lesson.color}08`, borderLeft: `3px solid ${lesson.color}`, }}>
+                <span style={{ fontSize: 10, letterSpacing: 2, color: lesson.color, fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 6 }}>⟡ RESEARCH</span>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, margin: 0 }}>{block.text}</p>
+              </div>
+            );
+            return <p key={i} style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 2, margin: "0 0 14px" }}>{block.text}</p>;
+          })}
+        </GlassCard>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ animation: "fadeInUp 0.5s ease" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+        <div style={{ width: 3, height: 28, background: "linear-gradient(to bottom, #a78bfa, #06b6d4)", borderRadius: 2 }} />
+        <h2 style={{ fontSize: 22, fontWeight: 300, color: "#fff", fontFamily: "'Sora', sans-serif", margin: 0 }}>BIO FI3LD</h2>
+      </div>
+      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", lineHeight: 1.8, marginTop: 8, marginBottom: 28 }}>
+        Your body is surrounded by a measurable electromagnetic field that changes shape, size, and frequency based on your emotions. 
+        This isn't spiritual theory — it's physics. Explore how your feelings literally reshape the energy around you.
+      </p>
+
+      {/* Interactive Visualizer Section */}
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 32 }}>
+        {/* Biofield Visualizer */}
+        <GlassCard hover={false} style={{ flex: "0 1 420px", display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
+          <span style={{ fontSize: 10, letterSpacing: 3, color: "rgba(255,255,255,0.3)", fontFamily: "'Orbitron', sans-serif", marginBottom: 12 }}>YOUR BIOFIELD — LIVE</span>
+          <BiofieldVisualizer emotion={activeEmotion} intensity={intensity} />
+        </GlassCard>
+
+        {/* Controls */}
+        <div style={{ flex: 1, minWidth: 280, display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Emotion Selector */}
+          <GlassCard hover={false}>
+            <span style={{ fontSize: 10, letterSpacing: 3, color: "#00ff8c", fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 14 }}>SELECT AN EMOTION</span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {emotions.map(e => (
+                <button key={e.id} onClick={() => setActiveEmotion(e.id)} style={{
+                  padding: "10px 16px", borderRadius: 10, cursor: "pointer", transition: "all 0.3s ease",
+                  background: activeEmotion === e.id ? `${e.color}20` : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${activeEmotion === e.id ? `${e.color}50` : "rgba(255,255,255,0.06)"}`,
+                  color: activeEmotion === e.id ? e.color : "rgba(255,255,255,0.4)",
+                  display: "flex", alignItems: "center", gap: 6, fontSize: 12,
+                  boxShadow: activeEmotion === e.id ? `0 0 15px ${e.color}20` : "none",
+                }}>
+                  <span style={{ fontSize: 16 }}>{e.emoji}</span>
+                  <span style={{ textTransform: "capitalize", fontFamily: "'Sora', sans-serif" }}>{e.id}</span>
+                </button>
+              ))}
+            </div>
+          </GlassCard>
+
+          {/* Intensity Slider */}
+          <GlassCard hover={false}>
+            <span style={{ fontSize: 10, letterSpacing: 3, color: "rgba(255,255,255,0.3)", fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 10 }}>INTENSITY: <span style={{ color: isPositive ? "#00ff8c" : "#ef4444" }}>{intensity}%</span></span>
+            <input type="range" min="10" max="100" value={intensity} onChange={e => setIntensity(Number(e.target.value))}
+              style={{ width: "100%", accentColor: isPositive ? "#00ff8c" : "#ef4444", cursor: "pointer" }} />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>
+              <span>Faint</span><span>Overwhelming</span>
+            </div>
+          </GlassCard>
+
+          {/* What's happening box */}
+          <GlassCard hover={false} style={{ borderLeft: `3px solid ${isPositive ? "#00ff8c" : "#ef4444"}` }}>
+            <span style={{ fontSize: 10, letterSpacing: 3, color: isPositive ? "#00ff8c" : "#ef4444", fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 8 }}>⟡ WHAT'S HAPPENING</span>
+            {isPositive ? (
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.8, margin: 0 }}>
+                Your heart rhythm is <strong style={{ color: "#00ff8c" }}>coherent</strong> — smooth, ordered, harmonious. 
+                Your biofield is <strong style={{ color: "#00ff8c" }}>expanding</strong> outward, growing brighter. 
+                The electromagnetic waves you're emitting are like clean radio signals that other people's nervous systems can pick up and sync with. 
+                You are literally raising the vibration of every room you walk into.
+              </p>
+            ) : activeEmotion === "neutral" ? (
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.8, margin: 0 }}>
+                Your field is at baseline — neither expanding nor contracting. This is your resting state. 
+                Try selecting different emotions above to see how dramatically your biofield changes in real time.
+              </p>
+            ) : (
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.8, margin: 0 }}>
+                Your heart rhythm is <strong style={{ color: "#ef4444" }}>incoherent</strong> — jagged, chaotic, fragmented. 
+                Your biofield is <strong style={{ color: "#ef4444" }}>contracting</strong> close to your body, becoming smaller and dimmer. 
+                The electromagnetic noise you're emitting creates stress responses in people around you — even if you don't say a word. 
+                Your body is burning extra energy maintaining this state.
+              </p>
+            )}
+          </GlassCard>
+        </div>
+      </div>
+
+      {/* Earth Field Interaction */}
+      <GlassCard hover={false} style={{ marginBottom: 24 }}>
+        <span style={{ fontSize: 10, letterSpacing: 3, color: "#eab308", fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 4 }}>HOW YOUR FIELD AFFECTS PEOPLE & THE EARTH</span>
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 16 }}>
+          Slide to add more people. Watch how {isPositive ? "coherent fields connect and amplify" : "incoherent fields stay isolated"}.
+        </p>
+        <EarthFieldVisualizer emotion={activeEmotion} peopleCount={peopleCount} />
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12 }}>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "'JetBrains Mono', monospace" }}>PEOPLE:</span>
+          <input type="range" min="1" max="8" value={peopleCount} onChange={e => setPeopleCount(Number(e.target.value))}
+            style={{ flex: 1, accentColor: isPositive ? "#00ff8c" : "#ef4444", cursor: "pointer", maxWidth: 300 }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: isPositive ? "#00ff8c" : "#ef4444", fontFamily: "'Orbitron', sans-serif" }}>{peopleCount}</span>
+        </div>
+        {peopleCount >= 3 && isPositive && (
+          <div style={{ marginTop: 12, padding: "10px 16px", borderRadius: 8, background: "rgba(0,255,140,0.06)", border: "1px solid rgba(0,255,140,0.12)" }}>
+            <p style={{ fontSize: 12, color: "#00ff8c", margin: 0 }}>⟡ Collective coherence detected — the group field is amplifying. Earth's field is responding.</p>
+          </div>
+        )}
+      </GlassCard>
+
+      {/* Lessons Grid */}
+      <div style={{ marginBottom: 8 }}>
+        <span style={{ fontSize: 10, letterSpacing: 3, color: "rgba(255,255,255,0.3)", fontFamily: "'Orbitron', sans-serif" }}>DEEP DIVE LESSONS</span>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 12 }}>
+        {lessons.map(lesson => (
+          <GlassCard key={lesson.id} onClick={() => setActiveLesson(lesson.id)} style={{
+            flex: "1 1 260px", minWidth: 240, cursor: "pointer", borderTop: `2px solid ${lesson.color}40`,
+          }}>
+            <span style={{ fontSize: 28, display: "block", marginBottom: 10 }}>{lesson.icon}</span>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: "#fff", fontFamily: "'Orbitron', sans-serif", margin: "0 0 6px", letterSpacing: 1 }}>{lesson.title}</h3>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", lineHeight: 1.6, margin: "0 0 12px" }}>
+              {lesson.content.find(c => c.type === "text")?.text.substring(0, 90)}...
+            </p>
+            <span style={{ fontSize: 10, color: lesson.color, letterSpacing: 2, fontFamily: "'Orbitron', sans-serif" }}>READ →</span>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* Bottom disclaimer */}
+      <div style={{ marginTop: 28, padding: 16, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", textAlign: "center" }}>
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: "'JetBrains Mono', monospace", margin: 0 }}>
+          Based on research from the HeartMath Institute, Dr. Valerie Hunt (UCLA), Dr. Harold Burr (Yale), and the Global Coherence Initiative. Your biofield is real. Your emotions shape it. You shape the world around you.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// BIO FI3LD — Interactive Biofield Education
+// ═══════════════════════════════════════════════════════════════
+
+function BiofieldCanvas({ emotion, radius }) {
+  const canvasRef = useRef(null);
+  const animRef = useRef(null);
+
+  const emotionColors = {
+    love: { core: [340, 80, 60], mid: [320, 70, 50], outer: [280, 60, 40], speed: 0.8, chaos: 0.1, expand: 1.4 },
+    joy: { core: [50, 90, 65], mid: [40, 80, 55], outer: [30, 70, 45], speed: 1.2, chaos: 0.15, expand: 1.3 },
+    peace: { core: [200, 70, 60], mid: [220, 60, 50], outer: [240, 50, 40], speed: 0.4, chaos: 0.05, expand: 1.2 },
+    fear: { core: [0, 10, 30], mid: [20, 30, 25], outer: [0, 5, 20], speed: 2.5, chaos: 0.6, expand: 0.6 },
+    anger: { core: [0, 90, 50], mid: [15, 80, 40], outer: [350, 70, 30], speed: 3, chaos: 0.8, expand: 0.8 },
+    sadness: { core: [220, 40, 35], mid: [230, 30, 28], outer: [240, 20, 20], speed: 0.3, chaos: 0.2, expand: 0.7 },
+    gratitude: { core: [140, 80, 55], mid: [120, 70, 50], outer: [160, 60, 45], speed: 0.6, chaos: 0.08, expand: 1.5 },
+    neutral: { core: [180, 30, 45], mid: [190, 25, 38], outer: [200, 20, 30], speed: 0.7, chaos: 0.15, expand: 1.0 },
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const size = 400;
+    canvas.width = size * 2; canvas.height = size * 2;
+    ctx.scale(2, 2);
+    const cx = size / 2, cy = size / 2;
+    const em = emotionColors[emotion] || emotionColors.neutral;
+
+    const draw = (time) => {
+      const t = time * 0.001;
+      ctx.clearRect(0, 0, size, size);
+
+      // Draw biofield layers (outer to inner)
+      const layers = 8;
+      for (let i = layers; i >= 0; i--) {
+        const layerRatio = i / layers;
+        const baseRadius = (30 + layerRatio * 120) * em.expand * (radius / 100);
+
+        // Organic wobble
+        ctx.beginPath();
+        const points = 64;
+        for (let p = 0; p <= points; p++) {
+          const angle = (Math.PI * 2 / points) * p;
+          const wobble1 = Math.sin(angle * 3 + t * em.speed) * em.chaos * 20;
+          const wobble2 = Math.cos(angle * 5 + t * em.speed * 0.7) * em.chaos * 12;
+          const wobble3 = Math.sin(angle * 7 + t * em.speed * 1.3) * em.chaos * 8;
+          const r = baseRadius + wobble1 + wobble2 + wobble3;
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r;
+          ctx[p === 0 ? "moveTo" : "lineTo"](x, y);
+        }
+        ctx.closePath();
+
+        const h = em.core[0] + (em.outer[0] - em.core[0]) * layerRatio;
+        const s = em.core[1] + (em.outer[1] - em.core[1]) * layerRatio;
+        const l = em.core[2] + (em.outer[2] - em.core[2]) * layerRatio;
+        const alpha = (1 - layerRatio) * 0.12 + 0.02;
+
+        ctx.fillStyle = `hsla(${h}, ${s}%, ${l}%, ${alpha})`;
+        ctx.fill();
+        ctx.strokeStyle = `hsla(${h}, ${s}%, ${l + 15}%, ${alpha * 1.5})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+
+      // Body silhouette (center)
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - 35, 14, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 10, 20, 35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 55, 12, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx - 10, cy + 55, 12, 30, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx + 10, cy + 55, 12, 30, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Chakra points
+      const chakraY = [cy - 42, cy - 28, cy - 14, cy, cy + 14, cy + 28, cy + 42];
+      const chakraColors = ["#a855f7", "#6366f1", "#06b6d4", "#22c55e", "#eab308", "#f97316", "#ef4444"];
+      chakraY.forEach((y, i) => {
+        const pulse = Math.sin(t * 2 + i * 0.8) * 0.3 + 0.7;
+        const r = 3 + pulse * 2;
+        ctx.beginPath();
+        ctx.arc(cx, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = chakraColors[i];
+        ctx.shadowColor = chakraColors[i];
+        ctx.shadowBlur = 8 + pulse * 6;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // Energy particles flowing through field
+      for (let p = 0; p < 30; p++) {
+        const angle = (Math.PI * 2 / 30) * p + t * em.speed * 0.3;
+        const dist = 60 + Math.sin(t * 0.5 + p * 0.7) * 40 * em.expand;
+        const px = cx + Math.cos(angle) * dist * (radius / 100);
+        const py = cy + Math.sin(angle) * dist * (radius / 100);
+        const particleSize = 1 + Math.sin(t + p) * 0.8;
+        const h = em.core[0] + Math.sin(t + p * 0.5) * 30;
+        ctx.beginPath();
+        ctx.arc(px, py, particleSize, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${h}, 70%, 65%, ${0.3 + Math.sin(t * 2 + p) * 0.2})`;
+        ctx.fill();
+      }
+
+      // Heart coherence wave (toroidal hint)
+      if (emotion === "love" || emotion === "gratitude" || emotion === "joy") {
+        ctx.strokeStyle = `hsla(${em.core[0]}, 60%, 55%, 0.15)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let a = 0; a < Math.PI * 2; a += 0.05) {
+          const torusR = 80 * em.expand * (radius / 100);
+          const tubeR = 30 + Math.sin(t * 0.5) * 10;
+          const x = cx + (torusR + tubeR * Math.cos(a * 3 + t)) * Math.cos(a);
+          const y = cy + tubeR * Math.sin(a * 3 + t) * 0.6;
+          ctx[a === 0 ? "moveTo" : "lineTo"](x, y);
+        }
+        ctx.stroke();
+      }
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+    animRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [emotion, radius]);
+
+  return <canvas ref={canvasRef} style={{ width: 400, height: 400, maxWidth: "100%" }} />;
+}
+
+// Earth field connection visualizer
+function EarthFieldCanvas({ emotion, sendingLove }) {
+  const canvasRef = useRef(null);
+  const animRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = 700, h = 260;
+    canvas.width = w * 2; canvas.height = h * 2;
+    ctx.scale(2, 2);
+
+    const people = [
+      { x: 100, label: "YOU" },
+      { x: 280, label: "NEARBY" },
+      { x: 460, label: "DISTANT" },
+      { x: 600, label: "EARTH" },
+    ];
+
+    const draw = (time) => {
+      const t = time * 0.001;
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw connection waves between people
+      const waveColor = sendingLove
+        ? `hsla(140, 70%, 55%, ${0.15 + Math.sin(t * 2) * 0.1})`
+        : `hsla(200, 30%, 40%, 0.08)`;
+
+      for (let i = 0; i < people.length - 1; i++) {
+        const from = people[i], to = people[i + 1];
+        ctx.beginPath();
+        for (let x = from.x; x <= to.x; x += 2) {
+          const progress = (x - from.x) / (to.x - from.x);
+          const waveH = Math.sin(x * 0.05 + t * (sendingLove ? 3 : 1)) * (sendingLove ? 15 : 6);
+          const y = 130 + waveH * (1 - Math.abs(progress - 0.5) * 2);
+          ctx[x === from.x ? "moveTo" : "lineTo"](x, y);
+        }
+        ctx.strokeStyle = waveColor;
+        ctx.lineWidth = sendingLove ? 2 : 1;
+        ctx.stroke();
+
+        // Second harmonic
+        ctx.beginPath();
+        for (let x = from.x; x <= to.x; x += 2) {
+          const waveH = Math.cos(x * 0.08 + t * 1.5) * (sendingLove ? 10 : 4);
+          const y = 130 + waveH;
+          ctx[x === from.x ? "moveTo" : "lineTo"](x, y);
+        }
+        ctx.strokeStyle = sendingLove
+          ? `hsla(320, 60%, 55%, ${0.1 + Math.sin(t) * 0.05})`
+          : `hsla(220, 20%, 35%, 0.05)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Traveling energy pulses
+      if (sendingLove) {
+        for (let pulse = 0; pulse < 5; pulse++) {
+          const px = (t * 80 + pulse * 140) % (w - 50) + 50;
+          const py = 130 + Math.sin(px * 0.03 + t) * 8;
+          ctx.beginPath();
+          ctx.arc(px, py, 3 + Math.sin(t * 3 + pulse) * 1.5, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${140 + pulse * 40}, 70%, 60%, ${0.5 + Math.sin(t * 2 + pulse) * 0.3})`;
+          ctx.shadowColor = `hsla(${140 + pulse * 40}, 80%, 55%, 0.5)`;
+          ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // Draw people with biofield bubbles
+      people.forEach((p, i) => {
+        const fieldSize = i === 0 ? (sendingLove ? 40 : 25) : (sendingLove ? 30 - i * 3 : 18 - i * 2);
+        const hue = i === 3 ? 140 : (sendingLove ? 320 - i * 30 : 200);
+        const pulse = Math.sin(t * 1.5 + i) * 0.2 + 0.8;
+
+        // Field
+        ctx.beginPath();
+        ctx.ellipse(p.x, 130, fieldSize * pulse, fieldSize * 1.3 * pulse, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue}, 50%, 45%, 0.08)`;
+        ctx.strokeStyle = `hsla(${hue}, 50%, 50%, 0.15)`;
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
+
+        // Body dot
+        ctx.beginPath();
+        ctx.arc(p.x, 130, i === 3 ? 10 : 5, 0, Math.PI * 2);
+        ctx.fillStyle = i === 3 ? `hsla(140, 60%, 40%, 0.5)` : `rgba(255,255,255,0.2)`;
+        ctx.fill();
+
+        // Earth icon
+        if (i === 3) {
+          ctx.font = "16px sans-serif";
+          ctx.fillText("🌍", p.x - 8, 135);
+        }
+
+        // Label
+        ctx.font = "9px 'Orbitron', monospace";
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        ctx.textAlign = "center";
+        ctx.fillText(p.label, p.x, 175);
+      });
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+    animRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [emotion, sendingLove]);
+
+  return <canvas ref={canvasRef} style={{ width: "100%", maxWidth: 700, height: 260 }} />;
+}
+
+function BiofieldSection() {
+  const [emotion, setEmotion] = useState("neutral");
+  const [fieldRadius, setFieldRadius] = useState(80);
+  const [sendingLove, setSendingLove] = useState(false);
+  const [activeLesson, setActiveLesson] = useState(null);
+
+  const emotions = [
+    { id: "love", label: "Love", emoji: "💖", color: "#ec4899", desc: "Your biofield expands to its maximum — up to 15 feet. Heart produces the strongest electromagnetic signal. Others can literally feel it." },
+    { id: "joy", label: "Joy", emoji: "✨", color: "#eab308", desc: "High-frequency state. Your field brightens and becomes more active. Energy particles move faster. You become magnetic to good things." },
+    { id: "gratitude", label: "Gratitude", emoji: "🙏", color: "#22c55e", desc: "Produces heart coherence — your heart rhythm becomes smooth and ordered. This signal syncs with Earth's Schumann resonance (7.83 Hz)." },
+    { id: "peace", label: "Peace", emoji: "🕊️", color: "#06b6d4", desc: "Calm, expanded field with minimal distortion. Your nervous system enters rest-and-repair mode. Healing happens in this state." },
+    { id: "neutral", label: "Neutral", emoji: "😐", color: "#64748b", desc: "Average biofield state. Not expanding, not contracting. Most people walk around here — functional but not optimized." },
+    { id: "sadness", label: "Sadness", emoji: "💧", color: "#6366f1", desc: "Your field contracts and dims. Energy moves slower. The body redirects resources inward. This isn't bad — it's processing." },
+    { id: "fear", label: "Fear", emoji: "😰", color: "#78716c", desc: "Field collapses close to the body and becomes chaotic. Fight-or-flight activates. Your heart signal becomes irregular and jagged." },
+    { id: "anger", label: "Anger", emoji: "🔥", color: "#ef4444", desc: "Intense, spiky field with maximum chaos. Strong energy output but destructive pattern. Others feel this as tension or threat." },
+  ];
+
+  const lessons = [
+    {
+      id: "what", title: "What Is Your Biofield?", icon: "🔮", color: "#a78bfa",
+      content: [
+        { head: "You Are Electric", text: "Your body is not just skin and bones — it runs on electricity. Every cell in your body has a voltage, like a tiny battery. Your heart generates an electrical signal so strong it can be measured from several feet away. Your brain fires billions of electrical signals every second. All of this electricity creates an invisible energy field around your body — your biofield." },
+        { head: "Think of It Like WiFi", text: "You know how your phone connects to WiFi? The router sends out invisible waves and your phone picks them up. Your body works the same way. Your heart sends out electromagnetic waves that travel outward from your body in a donut shape (scientists call this a torus). Other people's bodies can actually pick up these waves — that's why you can 'feel' someone's mood when they walk into a room." },
+        { head: "It's Been Measured by Science", text: "The HeartMath Institute has measured the human biofield extending 6-15 feet from the body. Doctors measure your heart's field with an ECG and your brain's field with an EEG. SQUID magnetometers can detect the field of individual organs. This isn't magic — it's measurable, repeatable physics." },
+        { head: "Ancient People Knew About It", text: "Every ancient culture had a name for this: the Chinese called it 'Qi' (chi), Indians called it 'Prana,' the Japanese call it 'Ki.' They built entire medical systems around it thousands of years before we had the technology to measure it. They were right all along." },
+      ]
+    },
+    {
+      id: "how", title: "How Emotions Change Your Field", icon: "💓", color: "#ec4899",
+      content: [
+        { head: "Your Heart Is the Boss", text: "Most people think the brain runs the show. But your heart actually sends MORE signals TO the brain than the brain sends to the heart. The heart's electromagnetic field is 100 times stronger electrically and 5,000 times stronger magnetically than the brain's. When your heart is happy, your whole field changes." },
+        { head: "Coherent vs. Incoherent", text: "When you feel love, gratitude, or peace, your heart rhythm becomes smooth and wavy — like a perfect sine wave. Scientists call this 'coherence.' It's like clean music. When you feel stress, fear, or anger, the rhythm becomes jagged and chaotic — like static noise. This pattern radiates outward through your whole biofield." },
+        { head: "Other People Feel Your Field", text: "Have you ever walked into a room and just KNEW someone was angry, even before they said anything? That's because their chaotic biofield was literally disrupting yours. Your nervous system picks up other people's electromagnetic signals and processes them before your conscious mind even knows what's happening." },
+        { head: "You're Broadcasting 24/7", text: "You don't get to turn off your biofield. Every emotion you feel changes the signal you're sending into the world. Happy people make other people happy not just because of their words — their field is literally entraining (syncing up) the fields of people around them. You're a walking radio station." },
+      ]
+    },
+    {
+      id: "earth", title: "Your Field & The Earth", icon: "🌍", color: "#22c55e",
+      content: [
+        { head: "Earth Has a Heartbeat", text: "The Earth has its own electromagnetic pulse called the Schumann Resonance — it vibrates at 7.83 Hz. Your brain naturally produces alpha waves at almost the same frequency when you're calm and relaxed. This isn't a coincidence. You're literally tuned to the same station as the planet." },
+        { head: "We're All Connected to the Same Field", text: "Earth's magnetic field wraps around the entire planet like a giant invisible blanket. Every human, animal, and plant exists inside this field. When you change your biofield — even a tiny bit — it ripples outward into this shared field. One person's genuine love or fear contributes to the overall 'vibe' of the planet." },
+        { head: "The Global Consciousness Project", text: "Princeton University ran an experiment with random number generators placed around the world. During huge events where millions of people felt the same emotion (like 9/11, or a World Cup goal), the machines stopped being random. Mass human emotion literally changed the behavior of electronic equipment worldwide." },
+        { head: "Grounding Connects You Directly", text: "When you stand barefoot on Earth, free electrons flow from the ground into your body. This neutralizes free radicals (which cause inflammation), syncs your circadian rhythm, and literally plugs your biofield into Earth's field. It's the simplest, most powerful thing you can do — and it costs nothing." },
+      ]
+    },
+    {
+      id: "upgrade", title: "How to Upgrade Your Biofield", icon: "⚡", color: "#eab308",
+      content: [
+        { head: "Heart-Focused Breathing", text: "Put your hand on your heart. Breathe slowly — 5 seconds in, 5 seconds out. As you breathe, genuinely feel appreciation for something in your life. Within 60 seconds, your heart rhythm shifts into coherence and your biofield expands. Do this for 5 minutes daily and you will literally rewire your nervous system." },
+        { head: "Choose Your Emotions on Purpose", text: "Most people let their emotions run on autopilot — they react to whatever happens. But you can choose. When you catch yourself in fear or anger, you can consciously shift to gratitude or peace. It takes practice, but every time you do it, you're strengthening a neural pathway and expanding your field." },
+        { head: "Be Careful What You Consume", text: "Everything has a frequency — food, music, media, people. Junk food, scary news, and negative people shrink your biofield. Fresh food, nature, beautiful music, and loving people expand it. You're not being weird for being selective — you're being smart about your energy." },
+        { head: "Your Field Affects Others — Use It", text: "When you walk into a room with a strong, coherent biofield, you're not just helping yourself — you're giving everyone around you a chance to sync up with your signal. One calm person can shift an entire room. One genuinely loving person can shift a family, a school, a community. This is real power." },
+      ]
+    },
+  ];
+
+  const currentEmotion = emotions.find(e => e.id === emotion);
+
+  // Lesson detail view
+  if (activeLesson) {
+    const lesson = lessons.find(l => l.id === activeLesson);
+    return (
+      <div style={{ animation: "fadeInUp 0.4s ease" }}>
+        <button onClick={() => setActiveLesson(null)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", padding: "8px 18px", borderRadius: 8, cursor: "pointer", fontSize: 11, letterSpacing: 2, fontFamily: "'Orbitron', sans-serif", marginBottom: 24 }}>← BACK</button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+          <span style={{ fontSize: 40 }}>{lesson.icon}</span>
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: "#fff", fontFamily: "'Orbitron', sans-serif", margin: 0, letterSpacing: 1 }}>{lesson.title}</h2>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {lesson.content.map((block, i) => (
+            <GlassCard key={i} hover={false} style={{ borderLeft: `3px solid ${lesson.color}`, animation: `fadeInUp ${0.3 + i * 0.15}s ease` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: `${lesson.color}20`, border: `1px solid ${lesson.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: lesson.color, fontWeight: 700, fontFamily: "'Orbitron', sans-serif" }}>{i + 1}</div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: 0 }}>{block.head}</h3>
+              </div>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 2, margin: 0 }}>{block.text}</p>
+            </GlassCard>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ animation: "fadeInUp 0.5s ease" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+        <div style={{ width: 3, height: 28, background: "linear-gradient(to bottom, #a78bfa, #ec4899)", borderRadius: 2 }} />
+        <h2 style={{ fontSize: 22, fontWeight: 300, color: "#fff", fontFamily: "'Sora', sans-serif", margin: 0 }}>BIO FI3LD</h2>
+      </div>
+      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", lineHeight: 1.8, marginTop: 8, marginBottom: 28 }}>
+        Your body is surrounded by an invisible energy field — your biofield. It changes shape, size, and color based on your emotions, thoughts, and health. Learn how it works, see it in action, and discover how your field affects everyone around you.
+      </p>
+
+      {/* ─── Interactive Biofield Visualizer ─── */}
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 32 }}>
+        <GlassCard hover={false} style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "20px 24px" }}>
+          <span style={{ fontSize: 10, letterSpacing: 3, color: "rgba(255,255,255,0.3)", fontFamily: "'Orbitron', sans-serif", marginBottom: 12 }}>YOUR BIOFIELD — LIVE</span>
+          <BiofieldCanvas emotion={emotion} radius={fieldRadius} />
+          <div style={{ marginTop: 12, textAlign: "center" }}>
+            <span style={{ fontSize: 24 }}>{currentEmotion.emoji}</span>
+            <div style={{ fontSize: 14, color: currentEmotion.color, fontFamily: "'Orbitron', sans-serif", letterSpacing: 2, marginTop: 4 }}>{currentEmotion.label.toUpperCase()}</div>
+          </div>
+        </GlassCard>
+
+        <div style={{ flex: 1, minWidth: 280 }}>
+          {/* Emotion Selector */}
+          <GlassCard hover={false} style={{ marginBottom: 16 }}>
+            <span style={{ fontSize: 10, letterSpacing: 3, color: "#00ff8c", fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 14 }}>⟡ SELECT AN EMOTION — WATCH THE FIELD CHANGE</span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {emotions.map(em => (
+                <button key={em.id} onClick={() => { setEmotion(em.id); setFieldRadius(em.id === "love" || em.id === "gratitude" ? 120 : em.id === "fear" || em.id === "anger" ? 50 : em.id === "sadness" ? 60 : 80); }} style={{
+                  padding: "8px 14px", borderRadius: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.3s",
+                  background: emotion === em.id ? `${em.color}20` : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${emotion === em.id ? `${em.color}50` : "rgba(255,255,255,0.06)"}`,
+                  color: emotion === em.id ? em.color : "rgba(255,255,255,0.4)",
+                  fontSize: 12,
+                }}>
+                  <span style={{ fontSize: 16 }}>{em.emoji}</span> {em.label}
+                </button>
+              ))}
+            </div>
+          </GlassCard>
+
+          {/* Current emotion description */}
+          <GlassCard hover={false} style={{ borderLeft: `3px solid ${currentEmotion.color}`, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 10, letterSpacing: 2, color: currentEmotion.color, fontFamily: "'Orbitron', sans-serif" }}>WHAT'S HAPPENING TO YOUR FIELD</span>
+            </div>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.9, margin: 0 }}>{currentEmotion.desc}</p>
+          </GlassCard>
+
+          {/* Field Radius Slider */}
+          <GlassCard hover={false}>
+            <span style={{ fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.3)", fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 10 }}>FIELD STRENGTH</span>
+            <input type="range" min="20" max="150" value={fieldRadius} onChange={e => setFieldRadius(Number(e.target.value))}
+              style={{ width: "100%", accentColor: currentEmotion.color, height: 4, cursor: "pointer" }} />
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Collapsed</span>
+              <span style={{ fontSize: 12, color: currentEmotion.color, fontFamily: "'Orbitron', sans-serif" }}>{fieldRadius}%</span>
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Expanded</span>
+            </div>
+          </GlassCard>
+        </div>
+      </div>
+
+      {/* ─── Field-to-Field Connection ─── */}
+      <GlassCard hover={false} style={{ marginBottom: 32 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+          <div>
+            <span style={{ fontSize: 10, letterSpacing: 3, color: "#22c55e", fontFamily: "'Orbitron', sans-serif" }}>⟡ FIELD-TO-FIELD CONNECTION</span>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>See how your biofield signal reaches other people and the Earth itself</p>
+          </div>
+          <button onClick={() => setSendingLove(!sendingLove)} style={{
+            padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontSize: 11, letterSpacing: 2, fontFamily: "'Orbitron', sans-serif", transition: "all 0.3s",
+            background: sendingLove ? "rgba(236,72,153,0.15)" : "rgba(255,255,255,0.03)",
+            border: `1px solid ${sendingLove ? "rgba(236,72,153,0.4)" : "rgba(255,255,255,0.08)"}`,
+            color: sendingLove ? "#ec4899" : "rgba(255,255,255,0.4)",
+          }}>
+            {sendingLove ? "💖 SENDING LOVE — ACTIVE" : "◈ ACTIVATE LOVE SIGNAL"}
+          </button>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <EarthFieldCanvas emotion={emotion} sendingLove={sendingLove} />
+        </div>
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textAlign: "center", marginTop: 12, lineHeight: 1.7 }}>
+          {sendingLove
+            ? "Your coherent heart signal is radiating outward — influencing nearby fields, reaching distant people, and contributing to Earth's global field. This is real. This is measurable."
+            : "Press the button to activate a coherent love signal and watch how it travels from your field to others and to the Earth."}
+        </p>
+      </GlassCard>
+
+      {/* ─── Lesson Cards ─── */}
+      <span style={{ fontSize: 10, letterSpacing: 3, color: "rgba(255,255,255,0.3)", fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 16 }}>LEARN — TAP TO EXPLORE</span>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
+        {lessons.map(lesson => (
+          <GlassCard key={lesson.id} onClick={() => setActiveLesson(lesson.id)} style={{ flex: "1 1 280px", cursor: "pointer", borderTop: `2px solid ${lesson.color}40` }}>
+            <span style={{ fontSize: 32, display: "block", marginBottom: 12 }}>{lesson.icon}</span>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: "#fff", fontFamily: "'Orbitron', sans-serif", margin: "0 0 8px", letterSpacing: 1 }}>{lesson.title}</h3>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, margin: "0 0 14px" }}>
+              {lesson.content[0].text.substring(0, 120)}...
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 11, color: lesson.color, letterSpacing: 2, fontFamily: "'Orbitron', sans-serif" }}>READ →</span>
+              <div style={{ flex: 1, height: 1, background: `${lesson.color}20` }} />
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{lesson.content.length} sections</span>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* ─── Quick Facts ─── */}
+      <GlassCard hover={false} style={{ marginBottom: 24 }}>
+        <span style={{ fontSize: 10, letterSpacing: 3, color: "#eab308", fontFamily: "'Orbitron', sans-serif", display: "block", marginBottom: 16 }}>⟡ BIOFIELD FACTS</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {[
+            { fact: "Your heart's electromagnetic field extends 6-15 feet from your body", source: "HeartMath Institute", color: "#ef4444" },
+            { fact: "Heart is 100x electrically and 5,000x magnetically stronger than the brain", source: "HeartMath Research", color: "#ec4899" },
+            { fact: "Earth's Schumann Resonance (7.83 Hz) matches human alpha brainwaves", source: "NASA / Schumann 1952", color: "#22c55e" },
+            { fact: "Plants grow faster when exposed to coherent human biofields", source: "Dr. Bernard Grad, McGill University", color: "#a78bfa" },
+            { fact: "Random number generators worldwide responded to mass human emotion on 9/11", source: "Global Consciousness Project, Princeton", color: "#06b6d4" },
+            { fact: "Monks in meditation produce gamma waves 25x stronger than normal people", source: "Dr. Richard Davidson, UW-Madison", color: "#eab308" },
+            { fact: "DNA has been shown to respond to human intention and emotional states", source: "Dr. Glen Rein, HeartMath", color: "#f97316" },
+          ].map((f, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: f.color, boxShadow: `0 0 8px ${f.color}66`, marginTop: 7, flexShrink: 0 }} />
+              <div>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", margin: 0, lineHeight: 1.6 }}>{f.fact}</p>
+                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "'JetBrains Mono', monospace" }}>— {f.source}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+
+      <div style={{ padding: 16, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", textAlign: "center" }}>
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: "'JetBrains Mono', monospace", margin: 0 }}>
+          "The field is the sole governing agency of the particle." — Albert Einstein
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════════
 // H3ALING SECTION — Organ-Herb Matching System
 // ═══════════════════════════════════════════════════════════════
 
@@ -2268,6 +3271,7 @@ export default function RTV33() {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: "◈" },
     { id: "wakeup", label: "Wake Up", icon: "◉" },
+    { id: "biofield", label: "BIO FI3LD", icon: "◐" },
     { id: "healing", label: "H3ALING", icon: "❋" },
     { id: "knowledge", label: "Knowledge Portal", icon: "⬡" },
     { id: "practice", label: "Z3N ZON3", icon: "◎" },
@@ -2458,6 +3462,9 @@ export default function RTV33() {
 
           {/* ─── WAKE UP ─── */}
           {activeTab === "wakeup" && <WakeUpSection />}
+
+          {/* ─── BIO FI3LD ─── */}
+          {activeTab === "biofield" && <BiofieldSection />}
 
           {/* ─── H3ALING ─── */}
           {activeTab === "healing" && <HealingSection />}
